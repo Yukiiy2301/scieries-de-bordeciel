@@ -1,0 +1,8 @@
+create policy "member_stocks_delete" on public.member_stocks for delete to authenticated using (public.is_admin() or public.is_gestionnaire());
+create policy "stock_requests_delete" on public.stock_requests for delete to authenticated using (public.is_admin() or public.is_gestionnaire());
+create policy "purchases_delete" on public.purchases for delete to authenticated using (public.is_admin() or public.is_gestionnaire());
+create policy "sales_delete" on public.sales for delete to authenticated using (public.is_admin() or public.is_gestionnaire());
+create policy "sale_lines_delete" on public.sale_lines for delete to authenticated using (public.is_admin() or public.is_gestionnaire());
+create policy "debts_delete" on public.debts for delete to authenticated using (public.is_admin() or public.is_gestionnaire());
+create policy "orders_delete" on public.orders for delete to authenticated using (public.is_admin() or public.is_gestionnaire());
+create policy "settlements_delete" on public.settlements for delete to authenticated using (public.is_admin() or public.is_gestionnaire());

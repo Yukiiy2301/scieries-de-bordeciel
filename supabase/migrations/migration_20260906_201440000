@@ -1,0 +1,1 @@
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS cancelled_reason text; ALTER TABLE orders ADD COLUMN IF NOT EXISTS cancelled_at timestamp with time zone; ALTER TABLE orders ADD COLUMN IF NOT EXISTS cancelled_by uuid;

@@ -1,0 +1,26 @@
+create or replace function public.ensure_profile()
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_email text;
+  v_name text;
+begin
+  select email into v_email from auth.users where id = auth.uid();
+  select coalesce(raw_user_meta_data->>'name', '') into v_name from auth.users where id = auth.uid();
+  insert into public.profiles (id, name, email, role, requested_role, sawmill_access)
+  values (
+    auth.uid(),
+    coalesce(nullif(v_name, ''), split_part(coalesce(v_email, 'inconnu'), '@', 1)),
+    v_email,
+    case when (select count(*) from public.profiles) = 0 then 'admin' else 'pending' end,
+    'visiteur',
+    'both'
+  )
+  on conflict (id) do nothing;
+end;
+$$;
+
+grant execute on function public.ensure_profile() to authenticated;

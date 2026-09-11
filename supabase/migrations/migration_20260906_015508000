@@ -1,0 +1,14 @@
+create table if not exists public.recipes (
+  id text primary key,
+  name text not null,
+  ingredients jsonb not null default '[]',
+  sort_order int not null default 0
+);
+
+alter table public.recipes enable row level security;
+create policy "recipes_select" on public.recipes for select to authenticated using (true);
+create policy "recipes_insert" on public.recipes for insert to authenticated with check (public.is_admin());
+create policy "recipes_update" on public.recipes for update to authenticated using (public.is_admin()) with check (public.is_admin());
+create policy "recipes_delete" on public.recipes for delete to authenticated using (public.is_admin());
+
+ALTER PUBLICATION supabase_realtime ADD TABLE public.recipes;

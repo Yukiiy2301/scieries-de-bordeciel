@@ -1,0 +1,47 @@
+-- Rôle « pending » + rôle demandé
+ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_role_check;
+ALTER TABLE public.profiles ADD CONSTRAINT profiles_role_check CHECK (role in ('admin','gestionnaire','employe','client','visiteur','pending'));
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS requested_role text not null default 'visiteur';
+
+-- Nouveaux comptes : premier = admin, sinon « pending » (en attente de validation du rôle)
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  INSERT INTO public.profiles (id, name, email, role, requested_role)
+  VALUES (
+    new.id,
+    coalesce(new.raw_user_meta_data->>'name', split_part(new.email, '@', 1)),
+    new.email,
+    CASE WHEN (SELECT count(*) FROM public.profiles) = 0 THEN 'admin' ELSE 'pending' END,
+    coalesce(new.raw_user_meta_data->>'requested_role', 'visiteur')
+  )
+  ON CONFLICT (id) DO NOTHING;
+  RETURN new;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Lecture sûre du rôle demandé / réduction (security definer, évite la récursion RLS)
+CREATE OR REPLACE FUNCTION public.self_discount()
+RETURNS numeric
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT discount_percent FROM public.profiles WHERE id = auth.uid();
+$$;
+
+-- Un utilisateur peut modifier son nom / rôle demandé, mais JAMAIS son propre rôle ou sa réduction
+DROP POLICY IF EXISTS profiles_update ON public.profiles;
+CREATE POLICY "profiles_update" ON public.profiles FOR UPDATE TO authenticated
+  USING (id = auth.uid() OR public.is_admin())
+  WITH CHECK (public.is_admin() OR (id = auth.uid() AND role = public.current_role() AND discount_percent = public.self_discount()));

@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS snapshot_sawmills, snapshot_products, snapshot_recipes, snapshot_profiles, snapshot_client_entries, snapshot_member_stocks, snapshot_stock_requests, snapshot_stock_request_lines, snapshot_purchases, snapshot_sales, snapshot_sale_lines, snapshot_debts, snapshot_orders, snapshot_settlements;

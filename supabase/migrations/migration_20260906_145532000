@@ -1,0 +1,11 @@
+delete from public.sale_lines;
+delete from public.sales;
+delete from public.stock_request_lines;
+delete from public.stock_requests;
+delete from public.purchases;
+delete from public.member_stocks;
+delete from public.debts;
+delete from public.orders;
+delete from public.settlements;
+delete from public.client_entries;
+delete from public.profiles;
